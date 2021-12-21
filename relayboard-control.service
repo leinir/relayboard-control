@@ -1,0 +1,9 @@
+[Unit]
+Description=control system for the waveshare relayboard
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/relayboard-control
+
+[Install]
+WantedBy=multi-user.target
