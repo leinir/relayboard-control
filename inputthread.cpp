@@ -77,7 +77,7 @@ InputHandler::~InputHandler()
 {
     if (inputThread) {
         inputThread->quit();
-        inputThread->wait();
+        inputThread->wait(1000);
     }
     if (bcm2835_close()) {
         qDebug() << "Successfully shut down the relay connection";
