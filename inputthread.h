@@ -7,7 +7,7 @@ class InputThread : public QThread
 {
     Q_OBJECT
 public:
-    InputThread(QObject *parent = 0);
+    InputThread(QObject *parent = nullptr);
     ~InputThread() override;
     void run() override;
 signals:
