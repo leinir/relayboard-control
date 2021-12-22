@@ -67,6 +67,7 @@ public:
             int channelNumber = theKey.toInt();
             if (channelNumber > -1 && channelNumber < config->statusTopics().count()) {
                 const QString topicToUpdate{config->statusTopics().value(channelNumber - 1)};
+                qDebug() << "Publishing" << updatedState << "to" << topicToUpdate;
                 client->publish(topicToUpdate, updatedState.toLatin1(), 0, true);
             }
         }
