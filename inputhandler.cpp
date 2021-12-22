@@ -79,7 +79,6 @@ public:
     {
         bcm2835_gpio_fsel(channel, BCM2835_GPIO_FSEL_INPT);
         bcm2835_gpio_set_pud(channel, BCM2835_GPIO_PUD_UP);
-        lastValue = bcm2835_gpio_lev(channel);
     }
     ~PinReaderThread() override {
     }
@@ -101,6 +100,9 @@ public:
     Q_SLOT void abort() {
         shouldAbort = true;
     }
+    const QString mostRecentValue() const {
+        return QString::number(lastValue);
+    }
 private:
     // Set to max to try and ensure we get updated on the first run
     uint8_t lastValue{UINT8_MAX};
@@ -120,6 +122,9 @@ public:
             pinReader->abort();
             pinReader->wait(1000);
         }
+        if (bcm2835_close()) {
+            qDebug() << "Successfully shut down the relay connection";
+        }
     }
     KeyboardThread *inputThread{nullptr};
     QList<PinReaderThread*> pinReaders;
@@ -127,6 +132,7 @@ public:
 
 InputHandler::InputHandler(QObject *parent)
     : QObject(parent)
+    , d(new InputHandlerPrivate)
 {
     d->inputThread = new KeyboardThread(this);
     connect(d->inputThread, &KeyboardThread::keyPressed, this, &InputHandler::handleKeyPressed);
@@ -150,7 +156,7 @@ InputHandler::InputHandler(QObject *parent)
         d->pinReaders << new PinReaderThread(InputChannel7, this);
         d->pinReaders << new PinReaderThread(InputChannel8, this);
         for (PinReaderThread *pinReader : d->pinReaders) {
-            connect(pinReader, &PinReaderThread::pinValueChanged, this, &InputHandler::inputChannelStateChanged);
+            connect(pinReader, &PinReaderThread::pinValueChanged, this, &InputHandler::inputChannelStateChanged, Qt::QueuedConnection);
             pinReader->start();
         }
         qDebug() << "Successfully set up the relays for output. Send the relay number to pulse it, a to pulse all, or q to quit.";
@@ -162,12 +168,7 @@ InputHandler::InputHandler(QObject *parent)
 
 }
 
-InputHandler::~InputHandler()
-{
-    if (bcm2835_close()) {
-        qDebug() << "Successfully shut down the relay connection";
-    }
-}
+InputHandler::~InputHandler() = default;
 
 const char *relayChannelName(InputHandler::RelayChannel channel) {
     static const QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::RelayChannel>();
@@ -230,6 +231,15 @@ void InputHandler::handleKeyPressed(char keyValue)
     } else if (keyValue == '8') {
         pulseRelay(RelayChannel8);
     }
+}
+
+QStringList InputHandler::mostRecentChannelStates() const
+{
+    QStringList states;
+    for (PinReaderThread *pinReader : d->pinReaders) {
+        states << pinReader->mostRecentValue();
+    }
+    return states;
 }
 
 #include "inputhandler.moc"

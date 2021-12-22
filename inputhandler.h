@@ -60,6 +60,11 @@ public:
     Q_SLOT void pulseRelay(InputHandler::RelayChannel channel) const;
     Q_SLOT void handleKeyPressed(char keyValue);
     Q_SIGNAL void inputChannelStateChanged(InputHandler::InputChannel channel, const QString& updatedState);
+    /**
+     * Fetch the most recently updated channel states for all the channels
+     * @return An ordered list of the most recent states
+     */
+    QStringList mostRecentChannelStates() const;
 private:
     std::unique_ptr<InputHandlerPrivate> d;
 };
