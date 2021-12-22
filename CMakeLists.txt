@@ -21,14 +21,20 @@ include(KDEInstallDirs)
 include(KDECompilerSettings)
 include(KDECMakeSettings)
 
+# Requires libkf5config-dev
+find_package(KF5 5.54 REQUIRED Config)
+
 find_package (PkgConfig REQUIRED)
 pkg_check_modules(SYSTEMD REQUIRED systemd)
 pkg_get_variable(SYSTEMD_SYSTEMUNITDIR systemd systemdsystemunitdir)
+
+feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 add_executable(relayboard-control)
 target_sources(relayboard-control
     PRIVATE
     main.cpp
+    config.cpp
     inputthread.cpp
     mqttclient.cpp
 )
@@ -37,6 +43,7 @@ target_link_libraries(relayboard-control
     bcm2835
     Qt5::Core
     Qt5::Mqtt
+    KF5::ConfigCore
 )
 
 install(TARGETS relayboard-control ${INSTALL_TARGETS_DEFAULT_ARGS})
