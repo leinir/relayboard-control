@@ -22,6 +22,7 @@ public:
     QString configFile;
     bool isValid{false};
     QStringList toggleTopics;
+    QStringList statusTopics;
     QString mqttHost;
     int mqttPort{1883};
     QString mqttUsername;
@@ -40,6 +41,10 @@ Config::Config(const QString &configFile, QObject *parent)
         if (generalGroup.hasKey("toggleTopics")) {
             d->toggleTopics = generalGroup.readEntry("toggleTopics", QStringList{});
             qDebug() << "Found toggle topics in the configuration, now set to:" << d->toggleTopics;
+        }
+        if (generalGroup.hasKey("statusTopics")) {
+            d->statusTopics = generalGroup.readEntry("statusTopics", QStringList{});
+            qDebug() << "Found status topics in the configuration, now set to:" << d->statusTopics;
         }
         d->mqttHost = generalGroup.readEntry("mqttHost", QString{});
         d->mqttPort = generalGroup.readEntry("mqttPort", 1883);
@@ -71,6 +76,11 @@ char Config::charForTopic(const QString &topic) const
         result = positionTranslator.value(index);
     }
     return result;
+}
+
+QStringList Config::statusTopics() const
+{
+    return d->statusTopics;
 }
 
 bool Config::isValid() const

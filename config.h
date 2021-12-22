@@ -17,6 +17,7 @@ public:
 
     QStringList toggleTopics() const;
     char charForTopic(const QString &topic) const;
+    QStringList statusTopics() const;
 
     QString mqttHost() const;
     int mqttPort() const;
