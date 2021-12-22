@@ -33,26 +33,26 @@ public:
 
     enum RelayChannel {
         RelayChannelInvalid = 0,
-        RelayChannel1 = 5,
-        RelayChannel2 = 6,
-        RelayChannel3 = 13,
-        RelayChannel4 = 16,
-        RelayChannel5 = 19,
-        RelayChannel6 = 20,
-        RelayChannel7 = 21,
-        RelayChannel8 = 26
+        RelayChannel1 = 5,  // Pin 29 - P5
+        RelayChannel2 = 6,  // Pin 31 - P6
+        RelayChannel3 = 13, // Pin 33 - P13
+        RelayChannel4 = 16, // Pin 36 - P16
+        RelayChannel5 = 19, // Pin 35 - P19
+        RelayChannel6 = 20, // Pin 38 - P20
+        RelayChannel7 = 21, // Pin 40 - P21
+        RelayChannel8 = 26, // Pin 37 - P26
     };
     Q_ENUM(RelayChannel)
     enum InputChannel {
         InputChannelInvalid = 0,
-        InputChannel1 = 1,
-        InputChannel2 = 2,
-        InputChannel3 = 3,
-        InputChannel4 = 4,
-        InputChannel5 = 5,
-        InputChannel6 = 6,
-        InputChannel7 = 7,
-        InputChannel8 = 8,
+        InputChannel1 = 2,  // Pin 3  - P2
+        InputChannel2 = 3,  // Pin 5  - P3
+        InputChannel3 = 4,  // Pin 7  - P4
+        InputChannel4 = 17, // Pin 11 - P17
+        InputChannel5 = 27, // Pin 13 - P27
+        InputChannel6 = 22, // Pin 15 - P22
+        InputChannel7 = 10, // Pin 19 - P10
+        InputChannel8 = 9,  // Pin 21 - P9
     };
     Q_ENUM(InputChannel)
 
