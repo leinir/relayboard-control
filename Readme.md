@@ -112,15 +112,14 @@ The port shown in the example above is the default set by MQTT, but as that is
 unencrypted, the recommendation is to change this to something which is. It will,
 however, work without.
 
-Finally, you set `statusTopics` to a list line the one above. This is currently
-unimplemented, but once it is, this will report on the current high/low state of
-eight further pins on the raspberry pi (that state detection mentioned in the
-introduction). The logic is the same as for `toggleTopics`, in that the order
-defines which input pin will be set. Also, once implemented, this will be checked
-and published on startup, to ensure that the MQTT broker has up to date
-information, even if it has been asked to retain the most recently published
-state. By convention, the endpoint should be the same name as the toggle topic,
-except that it should end with status (so some/mqtt/topic/four/toggle and
+Finally, you set `statusTopics` to a list line the one above. This will  cause
+the service to report on the current high/low state of eight further pins on the
+raspberry pi (that state detection mentioned in the introduction). The logic is
+the same as for `toggleTopics`, in that the order defines which input pin will be
+set. This will be checked and published on startup, to ensure that the MQTT broker
+has up to date information, even if it has been asked to retain the most recently
+published state. By convention, the endpoint should be the same name as the toggle
+topic, except that it should end with status (so some/mqtt/topic/four/toggle and
 some/mqtt/topic/four/status would correspond to toggling and containing the state
 for the same remote relay).
 
