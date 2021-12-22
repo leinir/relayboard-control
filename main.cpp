@@ -20,7 +20,7 @@
 #include <QCommandLineParser>
 
 #include "config.h"
-#include "inputthread.h"
+#include "inputhandler.h"
 #include "mqttclient.h"
 
 int main(int argc, char *argv[])

@@ -16,7 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "inputthread.h"
+#include "inputhandler.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -44,35 +44,93 @@ void resetTermios(void)
     tcsetattr(0, TCSANOW, &oldSettings);
 }
 
-InputThread::InputThread(QObject *parent)
-    : QThread(parent)
+class KeyboardThread : public QThread
 {
-    initTermios(0);
-}
-
-InputThread::~InputThread()
-{
-    resetTermios();
-}
-
-void InputThread::run()
-{
-    while (true)
+    Q_OBJECT
+public:
+    KeyboardThread(QObject *parent = nullptr)
+        : QThread(parent)
     {
-        char key = getchar();
-        Q_EMIT keyPressed(key);
-        if (key == 'q' || key == 'Q') {
-            break;
+        initTermios(0);
+    }
+    ~KeyboardThread() override {
+        resetTermios();
+    }
+    void run() override {
+        while (true)
+        {
+            char key = getchar();
+            Q_EMIT keyPressed(key);
+            if (key == 'q' || key == 'Q') {
+                break;
+            }
         }
     }
-}
+    Q_SIGNAL void keyPressed(char keyValue);
+};
+
+class PinReaderThread : public QThread
+{
+    Q_OBJECT
+public:
+    PinReaderThread(InputHandler::InputChannel channel, QObject *parent = nullptr)
+        : QThread(parent)
+        , channel(channel)
+    {
+        bcm2835_gpio_fsel(channel, BCM2835_GPIO_FSEL_INPT);
+        bcm2835_gpio_set_pud(channel, BCM2835_GPIO_PUD_UP);
+        lastValue = bcm2835_gpio_lev(channel);
+    }
+    ~PinReaderThread() override {
+    }
+    void run() override {
+        uint8_t value{0};
+        while (true) {
+            if (shouldAbort) {
+                break;
+            }
+            value = bcm2835_gpio_lev(channel);
+            if (value != lastValue) {
+                Q_EMIT pinValueChanged(channel, QString::number(value));
+            }
+            lastValue = value;
+            usleep(250);
+        }
+    }
+    Q_SIGNAL void pinValueChanged(InputHandler::InputChannel channel, QString newPinValue);
+    Q_SLOT void abort() {
+        shouldAbort = true;
+    }
+private:
+    // Set to max to try and ensure we get updated on the first run
+    uint8_t lastValue{UINT8_MAX};
+    InputHandler::InputChannel channel;
+    bool shouldAbort{false};
+};
+
+class InputHandlerPrivate {
+public:
+    InputHandlerPrivate() {}
+    ~InputHandlerPrivate() {
+        if (inputThread) {
+            inputThread->quit();
+            inputThread->wait(1000);
+        }
+        for (PinReaderThread *pinReader : pinReaders) {
+            pinReader->abort();
+            pinReader->wait(1000);
+        }
+    }
+    KeyboardThread *inputThread{nullptr};
+    QList<PinReaderThread*> pinReaders;
+};
 
 InputHandler::InputHandler(QObject *parent)
     : QObject(parent)
 {
-    inputThread = new InputThread(this);
-    connect(inputThread, &InputThread::keyPressed, this, &InputHandler::handleKeyPressed);
-    connect(inputThread, &QThread::finished, qApp, &QCoreApplication::quit);
+    d->inputThread = new KeyboardThread(this);
+    connect(d->inputThread, &KeyboardThread::keyPressed, this, &InputHandler::handleKeyPressed);
+    connect(d->inputThread, &QThread::finished, qApp, &QCoreApplication::quit);
     if (bcm2835_init()) {
         bcm2835_gpio_fsel(RelayChannel1, BCM2835_GPIO_FSEL_OUTP);
         bcm2835_gpio_fsel(RelayChannel2, BCM2835_GPIO_FSEL_OUTP);
@@ -82,8 +140,21 @@ InputHandler::InputHandler(QObject *parent)
         bcm2835_gpio_fsel(RelayChannel6, BCM2835_GPIO_FSEL_OUTP);
         bcm2835_gpio_fsel(RelayChannel7, BCM2835_GPIO_FSEL_OUTP);
         bcm2835_gpio_fsel(RelayChannel8, BCM2835_GPIO_FSEL_OUTP);
+
+        d->pinReaders << new PinReaderThread(InputChannel1, this);
+        d->pinReaders << new PinReaderThread(InputChannel2, this);
+        d->pinReaders << new PinReaderThread(InputChannel3, this);
+        d->pinReaders << new PinReaderThread(InputChannel4, this);
+        d->pinReaders << new PinReaderThread(InputChannel5, this);
+        d->pinReaders << new PinReaderThread(InputChannel6, this);
+        d->pinReaders << new PinReaderThread(InputChannel7, this);
+        d->pinReaders << new PinReaderThread(InputChannel8, this);
+        for (PinReaderThread *pinReader : d->pinReaders) {
+            connect(pinReader, &PinReaderThread::pinValueChanged, this, &InputHandler::inputChannelStateChanged);
+            pinReader->start();
+        }
         qDebug() << "Successfully set up the relays for output. Send the relay number to pulse it, a to pulse all, or q to quit.";
-        inputThread->start();
+        d->inputThread->start();
     } else {
         qWarning() << "Failed to set up the relays for output!";
         qApp->quit();
@@ -93,10 +164,6 @@ InputHandler::InputHandler(QObject *parent)
 
 InputHandler::~InputHandler()
 {
-    if (inputThread) {
-        inputThread->quit();
-        inputThread->wait(1000);
-    }
     if (bcm2835_close()) {
         qDebug() << "Successfully shut down the relay connection";
     }
@@ -164,3 +231,5 @@ void InputHandler::handleKeyPressed(char keyValue)
         pulseRelay(RelayChannel8);
     }
 }
+
+#include "inputhandler.moc"

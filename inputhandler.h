@@ -21,17 +21,9 @@
 
 #include <QObject>
 #include <QThread>
-class InputThread : public QThread
-{
-    Q_OBJECT
-public:
-    InputThread(QObject *parent = nullptr);
-    ~InputThread() override;
-    void run() override;
-signals:
-    void keyPressed(char keyValue);
-};
+#include <memory>
 
+class InputHandlerPrivate;
 class InputHandler : public QObject
 {
     Q_OBJECT
@@ -69,7 +61,7 @@ public:
     Q_SLOT void handleKeyPressed(char keyValue);
     Q_SIGNAL void inputChannelStateChanged(InputHandler::InputChannel channel, const QString& updatedState);
 private:
-    InputThread *inputThread{nullptr};
+    std::unique_ptr<InputHandlerPrivate> d;
 };
- 
+
 #endif//INPUTTHREAD_H

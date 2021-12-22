@@ -23,7 +23,7 @@
 #include <memory>
 
 #include "config.h"
-#include "inputthread.h"
+#include "inputhandler.h"
 
 class MqttClientPrivate;
 class MqttClient : public QObject

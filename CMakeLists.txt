@@ -28,7 +28,7 @@ target_sources(relayboard-control
     PRIVATE
     main.cpp
     config.cpp
-    inputthread.cpp
+    inputhandler.cpp
     mqttclient.cpp
 )
 
