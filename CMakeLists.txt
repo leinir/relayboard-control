@@ -7,12 +7,6 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Requires qtbase5-dev
-# Requires Qt5Mqtt
-# - clone git://code.qt.io/qt/qtmqtt.git
-# - change to branch 5.11
-# - sudo apt install qtbase5-private-dev
-# - qmake -r && make && sudo make install
 find_package(Qt5 5.11 REQUIRED CONFIG COMPONENTS Core Mqtt)
 
 find_package(ECM 5.52.0 REQUIRED CONFIG)
@@ -21,7 +15,6 @@ include(KDEInstallDirs)
 include(KDECompilerSettings)
 include(KDECMakeSettings)
 
-# Requires libkf5config-dev
 find_package(KF5 5.54 REQUIRED Config)
 
 find_package (PkgConfig REQUIRED)
