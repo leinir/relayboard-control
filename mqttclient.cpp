@@ -2,32 +2,24 @@
 
 #include <QDebug>
 
-static const QHash<QString, char> subscriptionTopics{
-    {"foxhole/lights/apex-up/toggle", '1'},
-    {"foxhole/lights/apex-down/toggle", '2'},
-    {"foxhole/lights/tv-up/toggle", '3'},
-    {"foxhole/lights/tv-down/toggle", '4'},
-    {"foxhole/lights/bedroom-1/toggle", '5'},
-    {"foxhole/lights/bedroom-2/toggle", '6'},
-    {"foxhole/lights/kitchen/toggle", '7'},
-    {"foxhole/lights/dining/toggle", '8'}
-};
 
 class Subscription {
 public:
-    Subscription(MqttClient *q, QMqttSubscription *subscription)
+    Subscription(MqttClient *q, Config *config, QMqttSubscription *subscription)
         : q(q)
+        , config(config)
         , subscription(subscription)
     {
-        QObject::connect(subscription, &QMqttSubscription::messageReceived, q, [this,subscription,q](const QMqttMessage &msg){
+        QObject::connect(subscription, &QMqttSubscription::messageReceived, q, [this,config,subscription,q](const QMqttMessage &msg){
             qDebug() << "Received message" << msg.payload() << "for topic" << subscription->topic().filter();
-            q->inputHandler()->handleKeyPressed(subscriptionTopics[subscription->topic().filter()]);
+            q->inputHandler()->handleKeyPressed(config->charForTopic(subscription->topic().filter()));
         });
         QObject::connect(subscription, &QMqttSubscription::stateChanged, q, [this](){});
         QObject::connect(subscription, &QMqttSubscription::qosChanged, q, [this](){});
         qDebug() << "Subscribed to" << subscription->topic().filter() << "with the parent" << q;
     }
     MqttClient* q;
+    Config *config;
     QMqttSubscription *subscription;
 };
 
@@ -37,6 +29,7 @@ public:
         : q(q)
     {}
     MqttClient *q;
+    Config *config{nullptr};
     InputHandler *inputHandler{nullptr};;
 
     QMqttClient *client{nullptr};
@@ -44,17 +37,18 @@ public:
 
     void handleSubscription(QMqttSubscription *sub) {
         if (sub) {
-            subscriptions << Subscription(q, sub);
+            subscriptions << Subscription(q, config, sub);
         } else {
             qWarning() << "Could not subscribe! Is the connection valid?";
         }
     }
 };
 
-MqttClient::MqttClient(InputHandler *parent)
+MqttClient::MqttClient(Config *config, InputHandler *parent)
     : QObject(parent)
     , d(new MqttClientPrivate(this))
 {
+    d->config = config;
     d->inputHandler = parent;
 }
 
@@ -66,9 +60,12 @@ MqttClient::~MqttClient()
 void MqttClient::start()
 {
     d->client = new QMqttClient(this);
-    d->client->setHostname("mqtt.foxhole.furry.be");
-    d->client->setPort(1883);
-    d->client->setClientId("relayboard-control");
+    d->client->setHostname(d->config->mqttHost());
+    d->client->setPort(d->config->mqttPort());
+    if (!d->config->mqttUsername().isEmpty()) {
+        d->client->setUsername(d->config->mqttUsername());
+        d->client->setPassword(d->config->mqttPassword());
+    }
     connect(d->client, &QMqttClient::stateChanged, this, [this](QMqttClient::ClientState state){
         switch(state) {
             case QMqttClient::Disconnected:
@@ -79,8 +76,8 @@ void MqttClient::start()
                 qDebug() << "Connecting to MQTT broker...";
                 break;
             case QMqttClient::Connected:
-                for (const QString &key : subscriptionTopics.keys()) {
-                    d->handleSubscription(d->client->subscribe(key, 1));
+                for (const QString &topic : d->config->toggleTopics()) {
+                    d->handleSubscription(d->client->subscribe(topic, 1));
                 }
                 break;
         }

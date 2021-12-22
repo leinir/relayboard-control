@@ -4,6 +4,7 @@
 #include <QtMqtt>
 #include <memory>
 
+#include "config.h"
 #include "inputthread.h"
 
 class MqttClientPrivate;
@@ -11,7 +12,7 @@ class MqttClient : public QObject
 {
     Q_OBJECT
 public:
-    MqttClient(InputHandler *parent = 0);
+    MqttClient(Config *config, InputHandler *parent = nullptr);
     ~MqttClient() override;
 
     Q_SLOT void start();
