@@ -62,13 +62,13 @@ public:
     void handleInputChannelStateChange(InputHandler::InputChannel channel, const QString& updatedState) {
         static const QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::InputChannel>();
         if (channel != InputHandler::InputChannelInvalid) {
-            QString theKey{theEnum.valueToKey(channel)};
-            theKey.remove("InputChannel");
+            QString theKey{QString::fromLatin1(theEnum.valueToKey(channel))};
+            theKey = theKey.remove(0, 12);
             int channelNumber = theKey.toInt();
             if (channelNumber > -1 && channelNumber < config->statusTopics().count()) {
                 const QString topicToUpdate{config->statusTopics().value(channelNumber - 1)};
-                qDebug() << "Publishing" << updatedState << "to" << topicToUpdate;
                 client->publish(topicToUpdate, updatedState.toLatin1(), 0, true);
+                qDebug() << "Published" << updatedState << "to" << topicToUpdate;
             }
         }
     }
@@ -115,6 +115,17 @@ void MqttClient::start()
                         this, [this](InputHandler::InputChannel channel, const QString& updatedState){
                             d->handleInputChannelStateChange(channel, updatedState);
                         });
+                qDebug() << "Updating MQTT states with the currently best known values";
+                static const QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::InputChannel>();
+                const QStringList recentStates{d->inputHandler->mostRecentChannelStates()};
+                // Start at 1, because 0 is invalid and we aren't interested in that here
+                for (int i = 1; i < theEnum.keyCount(); ++i) {
+                    bool ok{false};
+                    int value = theEnum.keyToValue(theEnum.key(i), &ok);
+                    if (ok) {
+                        d->handleInputChannelStateChange(InputHandler::InputChannel(value), recentStates.value(i - 1));
+                    }
+                }
                 break;
         }
     });
