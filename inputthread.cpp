@@ -85,16 +85,34 @@ InputHandler::~InputHandler()
 }
 
 const char *relayChannelName(InputHandler::RelayChannel channel) {
-    QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::RelayChannel>();
+    static const QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::RelayChannel>();
     return theEnum.valueToKey(channel);
 }
 
-void pulseRelay(InputHandler::RelayChannel channel) {
-    qDebug() << "Pulsing" << relayChannelName(channel);
-    bcm2835_gpio_write(channel,LOW);
-    bcm2835_delay(50);
-    bcm2835_gpio_write(channel,HIGH);
-    bcm2835_delay(50);
+InputHandler::RelayChannel InputHandler::channelByNumber(int number) const
+{
+    static const QMetaEnum theEnum = QMetaEnum::fromType<InputHandler::RelayChannel>();
+    RelayChannel channel{RelayChannelInvalid};
+    if (number > -1 && number < theEnum.keyCount()) {
+        bool ok{false};
+        int value = theEnum.keyToValue(QString("RelayChannel%1").arg(QString::number(number)).toLatin1(), &ok);
+        if (ok) {
+            channel = RelayChannel(value);
+        }
+    }
+    return channel;
+}
+
+void InputHandler::pulseRelay(InputHandler::RelayChannel channel) const {
+    if (channel == RelayChannelInvalid) {
+        qWarning() << "Not pulsing invalid relay!";
+    } else {
+        qDebug() << "Pulsing" << relayChannelName(channel);
+        bcm2835_gpio_write(channel,LOW);
+        bcm2835_delay(50);
+        bcm2835_gpio_write(channel,HIGH);
+        bcm2835_delay(50);
+    }
 }
 
 void InputHandler::handleKeyPressed(char keyValue)
