@@ -176,3 +176,42 @@ sudo systemctl enable relayboard-control
 If you just want to run it, you can do so also using the standard commands for
 operating systemd services (start, stop, status, and so on). The service will
 output to the system log, which you can see using journalctl.
+
+## Our Own Setup
+
+Wanting to get the technical stuff out of the way first, here, then, is the
+description of what we are in fact controlling using this. We decided that what
+we wanted out of lighting control was a system which was able to be made smart,
+but which would also fail all the way back to "push button get light". What we
+came up with, then, was to use 24V DC controlled latching relays with two
+switched channels. One of the channels could supply the lights with 240v, and
+the other could be used independently to test the state of the relay from some
+external device.
+
+The 24V DC switching power was less important here, but it would allow us to
+run long enough cables to reach the light switches from our central box full
+of many relays, without having to call in an electrician to do so, by leaving
+the mains side untouched. It also makes it safer to switch from the Waveshare
+8-channel Relay Board, which, while it does handle 240v, it's of course nicer
+to not have to deal with mains if we can get away with that.
+
+Specifically, the relays we use are Finder's model 20.21.9.024.4000, and the
+switching power is provided by a DIN-mountable power supply by Phoenix called
+STEPPS1AC24 #2868622.
+
+What relayboard-control gives us, then, is both the momentary pulse that would
+cause the relay to switch its state, and the detection side which uses the
+unused second side of the relay to detect whether the lights are on or not, and
+then it exposes both of those through an mqtt broker, which can be interfaced
+with through Home Assistant (or, i guess, any other MQTT based thing). In
+short, it allows for our dumb light switches to become super-extra-smart.
+
+Now, the final trick here is that, we fitted those relays and the push-button
+wall switches at the end of 2019, and as i am writing this in December 2021, i
+am glad to confirm that the intention that it should fall back to "push button,
+get light" has worked a treat, as that is precisely what happens. We have yet
+to try the critical fallback of "oh no the power supply failed" where we would
+have to leave the control box open and push the button on the relays
+themselves, but since that is a basic function of the relays themselves, we
+have no doubt about whether or not that would work (or, well, function at
+least, given that would be at most a temporary workaround).
