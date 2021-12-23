@@ -65,7 +65,7 @@ public:
             QString theKey{QString::fromLatin1(theEnum.valueToKey(channel))};
             theKey = theKey.remove(0, 12);
             int channelNumber = theKey.toInt();
-            if (channelNumber > -1 && channelNumber < config->statusTopics().count()) {
+            if (channelNumber > 0 && channelNumber <= config->statusTopics().count()) {
                 const QString topicToUpdate{config->statusTopics().value(channelNumber - 1)};
                 client->publish(topicToUpdate, updatedState.toLatin1(), 0, true);
                 qDebug() << "Published" << updatedState << "to" << topicToUpdate;
