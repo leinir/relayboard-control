@@ -128,6 +128,41 @@ remote relay is closed or open respectively (that is, equivalent to pushing a
 button to close the circuit will cause "on" to be published, and not having the
 button pushed will cause "off" to be published).
 
+#### Alternative Topic Definition
+
+Instead of the two lines of topics above, you can also construct them in a more
+descriptive manner, by adding a section structured like the one below to your
+configuration file:
+
+```
+[Topics]
+topicBase=some/mqtt/topic
+toggleEndpoint=toggle
+statusEndpoint=status
+topic-1=kitchen
+topic-2=livingroom
+topic-3=bathroom
+topic-4=attic
+topic-5=bedroom
+```
+
+The above will be equivalent to having the two lines for toggle and status
+topics in your configuration, with five topics in each, in the form of e.g.
+some/mqtt/topic/kitchen/toggle for the first topic's toggle entry.
+
+Using this method expects you to have the status endpoint set up. If your toggle
+and status endpoints are toggle and status respectively, you can leave them out
+of the configuration file, as those values are the default. Note also that your
+topics must be listed in numerical order, that they are 1-indexed, and that if
+there is a hole in the list, the remainder will not be read (so say you have a
+list of topic-1, topic-2, topic-4, and topic-5, then the parser will ignore
+topics 4 and 5, as there was no 3 listed).
+
+You can leave out topicBase if you have different paths to the various parts
+if you need them, and you can add sub-paths in the topics as well (if, for
+example, you have a zoned setup, you could have topics named upstairs/bedroom-1
+and downstairs/bedroom-1 if you wanted).
+
 ### Enabling the systemd unit
 
 The systemd service is installed by the install command above, but to actually

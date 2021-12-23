@@ -70,6 +70,32 @@ Config::Config(const QString &configFile, QObject *parent)
         d->mqttPassword = generalGroup.readEntry("mqttPassword", QString{});
         qDebug() << "Our MQTT host is" << d->mqttHost << d->mqttPort;
 
+        // Now read from the Topics group
+        if (configReader.hasGroup("Topics")) {
+            static const QLatin1String pathSeparator{"/"};
+            const KConfigGroup topicsGroup = configReader.group("Topics");
+            QString topicBase = topicsGroup.readEntry("topicBase", QString());
+            if (!topicBase.isEmpty() && !topicBase.endsWith(pathSeparator)) {
+                topicBase += pathSeparator;
+            }
+            QString toggleEndpoint = topicsGroup.readEntry("toggleEndpoint", QString("toggle"));
+            if (!toggleEndpoint.isEmpty() && !toggleEndpoint.startsWith(pathSeparator)) {
+                toggleEndpoint = pathSeparator + toggleEndpoint;
+            }
+            QString statusEndpoint = topicsGroup.readEntry("statusEndpoint", QString("status"));
+            if (!statusEndpoint.isEmpty() && !statusEndpoint.startsWith(pathSeparator)) {
+                statusEndpoint = pathSeparator + statusEndpoint;
+            }
+            for (int i = 1; i < 8; ++i) {
+                const QString topic = topicsGroup.readEntry(QString("topic-%1").arg(QString::number(i)), QString());
+                if (topic.isEmpty()) {
+                    break;
+                }
+                d->toggleTopics << QString("%1%2%3").arg(topicBase).arg(topic).arg(toggleEndpoint);
+                d->statusTopics << QString("%1%2%3").arg(topicBase).arg(topic).arg(statusEndpoint);
+            }
+        }
+
         // Sanity check time - make sure we've got everything filled out that we want filled out
         if (d->toggleTopics.count() > 0 && !d->mqttHost.isEmpty()) {
             d->isValid = true;
