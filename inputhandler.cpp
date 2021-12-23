@@ -90,7 +90,9 @@ public:
             }
             value = bcm2835_gpio_lev(channel);
             if (value != lastValue) {
-                Q_EMIT pinValueChanged(channel, QString::number(value));
+                // The low value means the circuit is closed, and high means it
+                // is open, so reflect that in the return values
+                Q_EMIT pinValueChanged(channel, (value == LOW ? onValue : offValue));
             }
             lastValue = value;
             usleep(250);
@@ -101,13 +103,15 @@ public:
         shouldAbort = true;
     }
     const QString mostRecentValue() const {
-        return QString::number(lastValue);
+        return (lastValue == LOW ? onValue : offValue);
     }
 private:
     // Set to max to try and ensure we get updated on the first run
     uint8_t lastValue{UINT8_MAX};
     InputHandler::InputChannel channel;
     bool shouldAbort{false};
+    const QLatin1String onValue{"on"};
+    const QLatin1String offValue{"off"};
 };
 
 class InputHandlerPrivate {

@@ -112,7 +112,7 @@ The port shown in the example above is the default set by MQTT, but as that is
 unencrypted, the recommendation is to change this to something which is. It will,
 however, work without.
 
-Finally, you set `statusTopics` to a list line the one above. This will  cause
+Finally, you set `statusTopics` to a list like the one above. This will cause
 the service to report on the current high/low state of eight further pins on the
 raspberry pi (that state detection mentioned in the introduction). The logic is
 the same as for `toggleTopics`, in that the order defines which input pin will be
@@ -122,6 +122,11 @@ published state. By convention, the endpoint should be the same name as the togg
 topic, except that it should end with status (so some/mqtt/topic/four/toggle and
 some/mqtt/topic/four/status would correspond to toggling and containing the state
 for the same remote relay).
+
+The value published to the status topics are "on" and "off", for whether the
+remote relay is closed or open respectively (that is, equivalent to pushing a
+button to close the circuit will cause "on" to be published, and not having the
+button pushed will cause "off" to be published).
 
 ### Enabling the systemd unit
 
