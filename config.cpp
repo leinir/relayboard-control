@@ -86,7 +86,7 @@ Config::Config(const QString &configFile, QObject *parent)
             if (!statusEndpoint.isEmpty() && !statusEndpoint.startsWith(pathSeparator)) {
                 statusEndpoint = pathSeparator + statusEndpoint;
             }
-            for (int i = 1; i < 8; ++i) {
+            for (int i = 1; i < 9; ++i) {
                 const QString topic = topicsGroup.readEntry(QString("topic-%1").arg(QString::number(i)), QString());
                 if (topic.isEmpty()) {
                     break;
@@ -94,6 +94,9 @@ Config::Config(const QString &configFile, QObject *parent)
                 d->toggleTopics << QString("%1%2%3").arg(topicBase).arg(topic).arg(toggleEndpoint);
                 d->statusTopics << QString("%1%2%3").arg(topicBase).arg(topic).arg(statusEndpoint);
             }
+            qDebug() << "Topic section found, set topics to:";
+            qDebug() << d->toggleTopics;
+            qDebug() << d->statusTopics;
         }
 
         // Sanity check time - make sure we've got everything filled out that we want filled out
