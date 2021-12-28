@@ -219,8 +219,8 @@ least, given that would be at most a temporary workaround).
 ### Home Assistant Bits
 
 The final step you would need to use this tool, apart from setting up that mqtt
-broker and hooking it up to your Home Assistant instance (see here for how to
-do that: [https://www.home-assistant.io/integrations/mqtt/]), is to set up the
+broker and hooking it up to your Home Assistant instance ( [see here for how to
+do that](https://www.home-assistant.io/integrations/mqtt/) ), is to set up the
 switches for Home Assistant to use.
 
 As an example, here are the Home Assistant configuration bits for two of the
