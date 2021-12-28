@@ -215,3 +215,79 @@ have to leave the control box open and push the button on the relays
 themselves, but since that is a basic function of the relays themselves, we
 have no doubt about whether or not that would work (or, well, function at
 least, given that would be at most a temporary workaround).
+
+### Home Assistant Bits
+
+The final step you would need to use this tool, apart from setting up that mqtt
+broker and hooking it up to your Home Assistant instance (see here for how to
+do that: [https://www.home-assistant.io/integrations/mqtt/]), is to set up the
+switches for Home Assistant to use.
+
+As an example, here are the Home Assistant configuration bits for two of the
+eight switches we have configured at our place (just so you can see how the
+lists and whatnot should be done, as that confused me, a first-timer, with what
+needed to be unique entries and what should be entries in a list or object
+children or whatnot).
+
+With these entries in your configuration file, and the mqtt integration set up,
+two new switches will appear called Apex Up Light and Apex Down Light, and you
+can stick them anywhere you would like in the Lovelace UI.
+
+#### configuration.yaml:
+
+```
+binary_sensor:
+  - platform: mqtt
+    name: Apex Up Light
+    unique_id: binary_sensor.apex_up_light
+    state_topic: "foxhole/lights/apex-up/status"
+    payload_on: "on"
+    payload_off: "off"
+  - platform: mqtt
+    name: Apex Down Light
+    unique_id: binary_sensor.apex_down_light
+    state_topic: "foxhole/lights/apex-down/status"
+    payload_on: "on"
+    payload_off: "off"
+
+switch:
+  - platform: template
+    switches:
+      light_apex_up:
+        friendly_name: Apex Up Light
+        unique_id: switch.light_apex_up
+        value_template: "{{ is_state('binary_sensor.apex_up_light', 'on') }}"
+        turn_on:
+          service: script.toggle_apex_up_light
+        turn_off:
+          service: script.toggle_apex_up_light
+      light_apex_down:
+        friendly_name: Apex Down Light
+        unique_id: switch.light_apex_down
+        value_template: "{{ is_state('binary_sensor.apex_down_light', 'on') }}"
+        turn_on:
+          service: script.toggle_apex_down_light
+        turn_off:
+          service: script.toggle_apex_down_light
+```
+
+#### scripts.yaml:
+
+```
+toggle_apex_up_light:
+  alias: Toggle Apex Up Light
+  sequence:
+  - service: mqtt.publish
+    data:
+      topic: foxhole/lights/apex-up/toggle
+  mode: single
+  icon: mdi:wall-sconce-flat-variant
+toggle_apex_down_light:
+  alias: Toggle Apex Down Light
+  sequence:
+  - service: mqtt.publish
+    data:
+      topic: foxhole/lights/apex-down/toggle
+  mode: single
+  icon: mdi:wall-sconce-flat
+```
