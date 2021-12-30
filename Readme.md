@@ -177,6 +177,10 @@ If you just want to run it, you can do so also using the standard commands for
 operating systemd services (start, stop, status, and so on). The service will
 output to the system log, which you can see using journalctl.
 
+## The Board
+
+![The relay board with all wires hooked up and switch output and input wires exposed via RJ45 jacks](./docs/images/board-three-quarters.jpg "Relay Board, All Wired Up")
+
 ## Our Own Setup
 
 Wanting to get the technical stuff out of the way first, here, then, is the
